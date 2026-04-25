@@ -1,0 +1,57 @@
+# macOS
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V8
+.Trashes
+.AppleDouble
+.LSOverride
+Icon
+
+# macOS Finder
+.AppleDesktop
+Network Trash Folder
+Temporary Items
+
+# Editor — VS Code
+.vscode/
+!.vscode/extensions.json
+
+# Editor — JetBrains (WebStorm, etc.)
+.idea/
+*.iml
+*.iws
+*.ipr
+
+# Editor — Vim / Neovim
+*.swp
+*.swo
+*~
+.netrwhist
+
+# Editor — Emacs
+\#*\#
+.\#*
+
+# Editor — Sublime Text
+*.tmlanguage.cache
+*.tmPreferences.cache
+*.stTheme.cache
+*.sublime-workspace
+*.sublime-project
+
+# Logs
+*.log
+logs/
+
+# OS — Windows (in case anyone co-develops)
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# Temporary files
+*.tmp
+*.temp
+*.bak
+*.orig
