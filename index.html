@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, viewport-fit=cover"
+    />
+    <meta name="theme-color" content="#faf8f5" />
+    <meta
+      name="description"
+      content="A personal habit tracker — log your habits each day and watch trends emerge."
+    />
+    <title>Today · Habit Tracker</title>
+    <link rel="stylesheet" href="css/reset.css" />
+    <link rel="stylesheet" href="css/tokens.css" />
+    <link rel="stylesheet" href="css/app.css" />
+  </head>
+  <body>
+    <div class="app">
+      <header class="app-header">
+        <h1 class="app-header__title">Habit Tracker</h1>
+      </header>
+
+      <main class="app-main" id="main">
+        <section class="page" aria-labelledby="page-title">
+          <header>
+            <h2 id="page-title" class="page__title">Today</h2>
+            <p class="page__subtitle">Sunday, April 27</p>
+          </header>
+
+          <section class="empty-state" aria-live="polite">
+            <h3 class="empty-state__title">No habits yet</h3>
+            <p class="empty-state__body">
+              Once you create habits, you'll see a checklist here each day.
+            </p>
+          </section>
+        </section>
+      </main>
+
+      <nav class="app-nav" aria-label="Primary">
+        <a class="app-nav__item" href="index.html" aria-current="page">
+          <svg
+            class="app-nav__icon"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.6"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            aria-hidden="true"
+          >
+            <circle cx="12" cy="12" r="9" />
+            <path d="m9 12 2 2 4-4" />
+          </svg>
+          <span>Today</span>
+        </a>
+        <a class="app-nav__item" href="trends.html">
+          <svg
+            class="app-nav__icon"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.6"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            aria-hidden="true"
+          >
+            <polyline points="3 17 9 11 13 15 21 7" />
+            <polyline points="14 7 21 7 21 14" />
+          </svg>
+          <span>Trends</span>
+        </a>
+      </nav>
+    </div>
+
+    <script type="module" src="js/main.js"></script>
+  </body>
+</html>
