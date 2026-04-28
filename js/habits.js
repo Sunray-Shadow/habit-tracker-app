@@ -89,9 +89,9 @@ function formatSchedule(schedule) {
       return days.map((d) => DAY_SHORT[d]).filter(Boolean).join(' · ');
     }
     case 'weekly':
-      return `${schedule.count}× per week`;
+      return schedule.count ? `${schedule.count}× per week` : 'A few times a week';
     case 'monthly':
-      return `${schedule.count}× per month`;
+      return schedule.count ? `${schedule.count}× per month` : 'A few times a month';
     default:
       return '';
   }
@@ -115,12 +115,14 @@ function openSheet(sheetEl) {
   resetOptionsList(form);
   hideError(form);
 
+  const stage = sheetEl.querySelector('[data-stage="after-type"]');
+  if (stage) stage.hidden = true;
+
+  const saveBtn = sheetEl.querySelector('[data-save]');
+  if (saveBtn) saveBtn.hidden = true;
+
   sheetEl.hidden = false;
   document.body.classList.add('is-sheet-open');
-
-  requestAnimationFrame(() => {
-    sheetEl.querySelector('input[name="name"]')?.focus();
-  });
 }
 
 function closeSheet(sheetEl) {
@@ -144,6 +146,10 @@ function bindSheet(sheetEl, onSaved) {
     if (!btn) return;
     setPickerSelection(sheetEl, 'type', btn.dataset.value);
     showFields(sheetEl, 'type', btn.dataset.value);
+    revealStage(sheetEl, 'after-type');
+    requestAnimationFrame(() => {
+      sheetEl.querySelector('input[name="name"]')?.focus();
+    });
   });
 
   sheetEl.querySelector('[data-picker="schedule"]').addEventListener('click', (e) => {
@@ -151,6 +157,7 @@ function bindSheet(sheetEl, onSaved) {
     if (!btn) return;
     setPickerSelection(sheetEl, 'schedule', btn.dataset.value);
     showFields(sheetEl, 'schedule', btn.dataset.value);
+    revealSave(sheetEl);
   });
 
   sheetEl.querySelector('[data-day-picker]').addEventListener('click', (e) => {
@@ -179,6 +186,16 @@ function bindSheet(sheetEl, onSaved) {
     closeSheet(sheetEl);
     onSaved();
   });
+}
+
+function revealStage(sheetEl, name) {
+  const stage = sheetEl.querySelector(`[data-stage="${name}"]`);
+  if (stage) stage.hidden = false;
+}
+
+function revealSave(sheetEl) {
+  const saveBtn = sheetEl.querySelector('[data-save]');
+  if (saveBtn) saveBtn.hidden = false;
 }
 
 function setPickerSelection(sheetEl, picker, value) {
@@ -236,8 +253,8 @@ function readForm(form) {
   const scheduleKind = form.querySelector('[data-picker="schedule"] .picker__option--selected')?.dataset.value;
 
   const errors = [];
-  if (!name) errors.push('Name is required.');
   if (!type) errors.push('Pick a measurement type.');
+  if (!name) errors.push('Name is required.');
   if (!scheduleKind) errors.push('Pick a schedule.');
 
   if (errors.length) {
@@ -280,19 +297,25 @@ function readForm(form) {
     }
     habit.schedule.days = days;
   } else if (scheduleKind === 'weekly') {
-    const count = Number(form.querySelector('input[name="weekly-count"]').value);
-    if (!count || count < 1 || count > 7) {
-      showError(form, 'Times per week must be between 1 and 7.');
-      return null;
+    const raw = form.querySelector('input[name="weekly-count"]').value.trim();
+    if (raw !== '') {
+      const count = Number(raw);
+      if (!count || count < 1 || count > 7) {
+        showError(form, 'Times per week must be between 1 and 7.');
+        return null;
+      }
+      habit.schedule.count = count;
     }
-    habit.schedule.count = count;
   } else if (scheduleKind === 'monthly') {
-    const count = Number(form.querySelector('input[name="monthly-count"]').value);
-    if (!count || count < 1 || count > 31) {
-      showError(form, 'Times per month must be between 1 and 31.');
-      return null;
+    const raw = form.querySelector('input[name="monthly-count"]').value.trim();
+    if (raw !== '') {
+      const count = Number(raw);
+      if (!count || count < 1 || count > 31) {
+        showError(form, 'Times per month must be between 1 and 31.');
+        return null;
+      }
+      habit.schedule.count = count;
     }
-    habit.schedule.count = count;
   }
 
   return habit;

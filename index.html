@@ -121,20 +121,6 @@
         </header>
 
         <form class="sheet__body" novalidate>
-          <div class="field">
-            <label class="field__label" for="habit-name">Name</label>
-            <input
-              class="field__input"
-              type="text"
-              id="habit-name"
-              name="name"
-              placeholder="e.g., Read 10 pages"
-              maxlength="60"
-              autocomplete="off"
-              required
-            />
-          </div>
-
           <fieldset class="field">
             <legend class="field__label">How do you measure it?</legend>
             <div class="picker picker--grid" data-picker="type">
@@ -202,69 +188,85 @@
             </div>
           </fieldset>
 
-          <div class="field field__group" data-type-field="number" hidden>
-            <div>
-              <label class="field__label" for="habit-unit">Unit (optional)</label>
+          <div class="form-stage" data-stage="after-type" hidden>
+            <div class="field">
+              <label class="field__label" for="habit-name">Name</label>
               <input
                 class="field__input"
                 type="text"
-                id="habit-unit"
-                name="unit"
-                placeholder="e.g., pages, km, €"
-                maxlength="20"
+                id="habit-name"
+                name="name"
+                placeholder="e.g., Read 10 pages"
+                maxlength="60"
                 autocomplete="off"
+                required
               />
             </div>
-            <div>
-              <label class="field__label" for="habit-target">Daily target (optional)</label>
-              <input
-                class="field__input"
-                type="number"
-                id="habit-target"
-                name="target"
-                placeholder="e.g., 10"
-                min="0"
-                step="any"
-              />
-            </div>
-          </div>
 
-          <div class="field" data-type-field="scale" hidden>
-            <label class="field__label">Scale range</label>
-            <div class="scale-input">
-              <input class="field__input" type="number" name="scale-min" value="1" min="0" aria-label="Minimum" />
-              <span class="scale-input__sep">to</span>
-              <input class="field__input" type="number" name="scale-max" value="10" min="1" aria-label="Maximum" />
+            <div class="field field__group" data-type-field="number" hidden>
+              <div>
+                <label class="field__label" for="habit-unit">Unit (optional)</label>
+                <input
+                  class="field__input"
+                  type="text"
+                  id="habit-unit"
+                  name="unit"
+                  placeholder="e.g., pages, km, €"
+                  maxlength="20"
+                  autocomplete="off"
+                />
+              </div>
+              <div>
+                <label class="field__label" for="habit-target">Daily target (optional)</label>
+                <input
+                  class="field__input"
+                  type="number"
+                  id="habit-target"
+                  name="target"
+                  placeholder="e.g., 10"
+                  min="0"
+                  step="any"
+                />
+              </div>
             </div>
-          </div>
 
-          <div class="field" data-type-field="choices" hidden>
-            <label class="field__label">Options (at least 2)</label>
-            <div class="options-input" data-options-list></div>
-            <button type="button" class="btn btn--ghost btn--small" data-add-option>+ Add option</button>
-          </div>
-
-          <fieldset class="field">
-            <legend class="field__label">How often?</legend>
-            <div class="picker picker--list" data-picker="schedule">
-              <button type="button" class="picker__option picker__option--list" data-value="daily" aria-pressed="false">
-                <span class="picker__label">Every day</span>
-                <span class="picker__sublabel">Read, meditate, etc.</span>
-              </button>
-              <button type="button" class="picker__option picker__option--list" data-value="weekdays" aria-pressed="false">
-                <span class="picker__label">Specific days of the week</span>
-                <span class="picker__sublabel">Yoga Mon / Wed / Fri</span>
-              </button>
-              <button type="button" class="picker__option picker__option--list" data-value="weekly" aria-pressed="false">
-                <span class="picker__label">A few times a week</span>
-                <span class="picker__sublabel">Exercise 4× per week</span>
-              </button>
-              <button type="button" class="picker__option picker__option--list" data-value="monthly" aria-pressed="false">
-                <span class="picker__label">A few times a month</span>
-                <span class="picker__sublabel">Save €500 this month</span>
-              </button>
+            <div class="field" data-type-field="scale" hidden>
+              <label class="field__label">Scale range</label>
+              <div class="scale-input">
+                <input class="field__input" type="number" name="scale-min" value="1" min="0" aria-label="Minimum" />
+                <span class="scale-input__sep">to</span>
+                <input class="field__input" type="number" name="scale-max" value="10" min="1" aria-label="Maximum" />
+              </div>
             </div>
-          </fieldset>
+
+            <div class="field" data-type-field="choices" hidden>
+              <label class="field__label">Options (at least 2)</label>
+              <div class="options-input" data-options-list></div>
+              <button type="button" class="btn btn--ghost btn--small" data-add-option>+ Add option</button>
+            </div>
+
+            <fieldset class="field">
+              <legend class="field__label">How often?</legend>
+              <div class="picker picker--list" data-picker="schedule">
+                <button type="button" class="picker__option picker__option--list" data-value="daily" aria-pressed="false">
+                  <span class="picker__label">Every day</span>
+                  <span class="picker__sublabel">Read, meditate, etc.</span>
+                </button>
+                <button type="button" class="picker__option picker__option--list" data-value="weekdays" aria-pressed="false">
+                  <span class="picker__label">Specific days of the week</span>
+                  <span class="picker__sublabel">Yoga Mon / Wed / Fri</span>
+                </button>
+                <button type="button" class="picker__option picker__option--list" data-value="weekly" aria-pressed="false">
+                  <span class="picker__label">A few times a week</span>
+                  <span class="picker__sublabel">Exercise 4× per week</span>
+                </button>
+                <button type="button" class="picker__option picker__option--list" data-value="monthly" aria-pressed="false">
+                  <span class="picker__label">A few times a month</span>
+                  <span class="picker__sublabel">Save €500 this month</span>
+                </button>
+              </div>
+            </fieldset>
+          </div>
 
           <div class="field" data-schedule-field="weekdays" hidden>
             <label class="field__label">Which days?</label>
@@ -280,7 +282,7 @@
           </div>
 
           <div class="field" data-schedule-field="weekly" hidden>
-            <label class="field__label" for="weekly-count">Times per week</label>
+            <label class="field__label" for="weekly-count">Times per week (optional)</label>
             <input
               class="field__input"
               type="number"
@@ -293,7 +295,7 @@
           </div>
 
           <div class="field" data-schedule-field="monthly" hidden>
-            <label class="field__label" for="monthly-count">Times per month</label>
+            <label class="field__label" for="monthly-count">Times per month (optional)</label>
             <input
               class="field__input"
               type="number"
@@ -309,7 +311,7 @@
 
           <footer class="sheet__footer">
             <button type="button" class="btn btn--ghost" data-close>Cancel</button>
-            <button type="submit" class="btn btn--primary">Save habit</button>
+            <button type="submit" class="btn btn--primary" data-save hidden>Save habit</button>
           </footer>
         </form>
       </section>

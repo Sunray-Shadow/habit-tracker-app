@@ -443,6 +443,12 @@ body.is-sheet-open .fab {
   gap: var(--space-3);
 }
 
+.form-stage {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+}
+
 /* ------------------------------------------------- type / schedule pickers */
 
 .picker {
