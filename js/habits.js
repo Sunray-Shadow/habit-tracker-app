@@ -129,6 +129,10 @@ function openSheet(sheetEl) {
 
   sheetEl.hidden = false;
   document.body.classList.add('is-sheet-open');
+
+  requestAnimationFrame(() => {
+    sheetEl.querySelector('input[name="name"]')?.focus();
+  });
 }
 
 function closeSheet(sheetEl) {
@@ -153,9 +157,6 @@ function bindSheet(sheetEl, onSaved) {
     setPickerSelection(sheetEl, 'type', btn.dataset.value);
     showFields(sheetEl, 'type', btn.dataset.value);
     revealStage(sheetEl, 'after-type');
-    requestAnimationFrame(() => {
-      sheetEl.querySelector('input[name="name"]')?.focus();
-    });
   });
 
   sheetEl.querySelector('[data-picker="schedule"]').addEventListener('click', (e) => {

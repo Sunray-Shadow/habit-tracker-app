@@ -121,6 +121,20 @@
         </header>
 
         <form class="sheet__body" novalidate>
+          <div class="field field--prominent">
+            <label class="field__label" for="habit-name">Name your habit</label>
+            <input
+              class="field__input"
+              type="text"
+              id="habit-name"
+              name="name"
+              placeholder="e.g., Read 10 pages"
+              maxlength="60"
+              autocomplete="off"
+              required
+            />
+          </div>
+
           <fieldset class="field">
             <legend class="field__label">How do you measure it?</legend>
             <div class="picker picker--grid" data-picker="type">
@@ -189,20 +203,6 @@
           </fieldset>
 
           <div class="form-stage" data-stage="after-type" hidden>
-            <div class="field">
-              <label class="field__label" for="habit-name">Name</label>
-              <input
-                class="field__input"
-                type="text"
-                id="habit-name"
-                name="name"
-                placeholder="e.g., Read 10 pages"
-                maxlength="60"
-                autocomplete="off"
-                required
-              />
-            </div>
-
             <div class="field" data-type-field="number" hidden>
               <button
                 type="button"

@@ -443,6 +443,34 @@ body.is-sheet-open .fab {
   gap: var(--space-3);
 }
 
+.field--prominent {
+  gap: var(--space-2);
+  padding: var(--space-4);
+  background: var(--color-accent-soft);
+  border-radius: var(--radius-lg);
+}
+
+.field--prominent .field__label {
+  font-size: var(--text-sm);
+  font-weight: var(--weight-medium);
+  color: var(--color-accent-strong);
+}
+
+.field--prominent .field__input {
+  font-family: var(--font-display);
+  font-size: var(--text-lg);
+  font-weight: var(--weight-medium);
+  letter-spacing: var(--tracking-tight);
+  padding: var(--space-3) var(--space-4);
+  background: var(--color-surface);
+  border-color: var(--color-accent);
+}
+
+.field--prominent .field__input:focus {
+  border-color: var(--color-accent-strong);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-accent) 28%, transparent);
+}
+
 .form-stage {
   display: flex;
   flex-direction: column;
