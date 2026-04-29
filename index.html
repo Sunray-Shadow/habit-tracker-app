@@ -16,7 +16,7 @@
     <link rel="stylesheet" href="css/tokens.css" />
     <link rel="stylesheet" href="css/app.css" />
   </head>
-  <body>
+  <body data-page="today">
     <div class="app">
       <header class="app-header">
         <h1 class="app-header__title">Habit Tracker</h1>
@@ -26,17 +26,32 @@
         <section class="page" aria-labelledby="page-title">
           <header>
             <h2 id="page-title" class="page__title">Today</h2>
-            <p class="page__subtitle">Sunday, April 27</p>
+            <p class="page__subtitle" data-today-date>Today</p>
           </header>
 
-          <section class="empty-state" aria-live="polite">
+          <ul class="habit-list" id="habit-list" hidden></ul>
+
+          <section class="empty-state" id="today-empty" aria-live="polite">
             <h3 class="empty-state__title">No habits yet</h3>
             <p class="empty-state__body">
-              Once you create habits, you'll see a checklist here each day.
+              Tap the plus button to create your first habit.
             </p>
           </section>
         </section>
       </main>
+
+      <button id="add-habit-fab" class="fab" type="button" aria-label="Add habit">
+        <svg
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.8"
+          stroke-linecap="round"
+          aria-hidden="true"
+        >
+          <path d="M12 5v14M5 12h14" />
+        </svg>
+      </button>
 
       <nav class="app-nav" aria-label="Primary">
         <a class="app-nav__item" href="index.html" aria-current="page">
@@ -72,6 +87,245 @@
           <span>Trends</span>
         </a>
       </nav>
+    </div>
+
+    <div
+      id="habit-sheet"
+      class="sheet"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="sheet-title"
+      hidden
+    >
+      <div class="sheet__backdrop" data-close></div>
+      <section class="sheet__panel">
+        <header class="sheet__header">
+          <h2 id="sheet-title" class="sheet__title">New habit</h2>
+          <button
+            type="button"
+            class="sheet__close"
+            data-close
+            aria-label="Close"
+          >
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.8"
+              stroke-linecap="round"
+              aria-hidden="true"
+            >
+              <path d="M6 6l12 12M18 6l-12 12" />
+            </svg>
+          </button>
+        </header>
+
+        <form class="sheet__body" novalidate>
+          <div class="field field--prominent">
+            <label class="field__label" for="habit-name">Name your habit</label>
+            <input
+              class="field__input"
+              type="text"
+              id="habit-name"
+              name="name"
+              placeholder="e.g., Read 10 pages"
+              maxlength="60"
+              autocomplete="off"
+              required
+            />
+          </div>
+
+          <fieldset class="field">
+            <legend class="field__label">How do you measure it?</legend>
+            <div class="picker picker--grid" data-picker="type">
+              <button type="button" class="picker__option" data-value="toggle" aria-pressed="false">
+                <span class="picker__icon">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <circle cx="12" cy="12" r="9" />
+                    <path d="m9 12 2 2 4-4" />
+                  </svg>
+                </span>
+                <span class="picker__label">Yes / No</span>
+                <span class="picker__sublabel">Did you do it today?</span>
+              </button>
+              <button type="button" class="picker__option" data-value="number" aria-pressed="false">
+                <span class="picker__icon">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M9 4 7 20M17 4l-2 16M4 9h16M3 15h16" />
+                  </svg>
+                </span>
+                <span class="picker__label">Number</span>
+                <span class="picker__sublabel">Pages, km, € …</span>
+              </button>
+              <button type="button" class="picker__option" data-value="text" aria-pressed="false">
+                <span class="picker__icon">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M5 6h14M5 12h14M5 18h9" />
+                  </svg>
+                </span>
+                <span class="picker__label">Note</span>
+                <span class="picker__sublabel">Free-text journal</span>
+              </button>
+              <button type="button" class="picker__option" data-value="scale" aria-pressed="false">
+                <span class="picker__icon">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M3 12h18" />
+                    <circle cx="14" cy="12" r="3" />
+                  </svg>
+                </span>
+                <span class="picker__label">Scale</span>
+                <span class="picker__sublabel">Slider, e.g., 1–10</span>
+              </button>
+              <button type="button" class="picker__option" data-value="choices" aria-pressed="false">
+                <span class="picker__icon">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <circle cx="6" cy="7" r="1.5" />
+                    <circle cx="6" cy="12" r="1.5" />
+                    <circle cx="6" cy="17" r="1.5" />
+                    <path d="M11 7h9M11 12h9M11 17h6" />
+                  </svg>
+                </span>
+                <span class="picker__label">Options</span>
+                <span class="picker__sublabel">Good, okay, bad …</span>
+              </button>
+              <button type="button" class="picker__option" data-value="emoji" aria-pressed="false">
+                <span class="picker__icon">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <circle cx="12" cy="12" r="9" />
+                    <path d="M9 14c1 1.2 5 1.2 6 0" />
+                    <path d="M9 9.5h.01M15 9.5h.01" />
+                  </svg>
+                </span>
+                <span class="picker__label">Mood</span>
+                <span class="picker__sublabel">Happy / neutral / sad</span>
+              </button>
+            </div>
+          </fieldset>
+
+          <div class="form-stage" data-stage="after-type" hidden>
+            <div class="field" data-type-field="number" hidden>
+              <button
+                type="button"
+                class="extras-toggle"
+                data-extras-toggle="number"
+                aria-expanded="false"
+              >
+                <span class="extras-toggle__icon" aria-hidden="true">+</span>
+                <span>Add unit or daily target</span>
+              </button>
+              <div class="field__group" data-extras-content="number" hidden>
+                <div>
+                  <label class="field__label" for="habit-unit">Unit</label>
+                  <input
+                    class="field__input"
+                    type="text"
+                    id="habit-unit"
+                    name="unit"
+                    placeholder="e.g., pages, km, €"
+                    maxlength="20"
+                    autocomplete="off"
+                  />
+                </div>
+                <div>
+                  <label class="field__label" for="habit-target">Daily target</label>
+                  <input
+                    class="field__input"
+                    type="number"
+                    id="habit-target"
+                    name="target"
+                    placeholder="e.g., 10"
+                    min="0"
+                    step="any"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div class="field" data-type-field="scale" hidden>
+              <label class="field__label">Scale range</label>
+              <div class="scale-input">
+                <input class="field__input" type="number" name="scale-min" value="1" min="0" aria-label="Minimum" />
+                <span class="scale-input__sep">to</span>
+                <input class="field__input" type="number" name="scale-max" value="10" min="1" aria-label="Maximum" />
+              </div>
+            </div>
+
+            <div class="field" data-type-field="choices" hidden>
+              <label class="field__label">Options (at least 2)</label>
+              <div class="options-input" data-options-list></div>
+              <button type="button" class="btn btn--ghost btn--small" data-add-option>+ Add option</button>
+            </div>
+
+            <fieldset class="field">
+              <legend class="field__label">How often?</legend>
+              <div class="picker picker--list" data-picker="schedule">
+                <button type="button" class="picker__option picker__option--list" data-value="daily" aria-pressed="false">
+                  <span class="picker__label">Every day</span>
+                  <span class="picker__sublabel">Read, meditate, etc.</span>
+                </button>
+                <button type="button" class="picker__option picker__option--list" data-value="weekdays" aria-pressed="false">
+                  <span class="picker__label">Specific days of the week</span>
+                  <span class="picker__sublabel">Yoga Mon / Wed / Fri</span>
+                </button>
+                <button type="button" class="picker__option picker__option--list" data-value="weekly" aria-pressed="false">
+                  <span class="picker__label">A few times a week</span>
+                  <span class="picker__sublabel">Exercise 4× per week</span>
+                </button>
+                <button type="button" class="picker__option picker__option--list" data-value="monthly" aria-pressed="false">
+                  <span class="picker__label">A few times a month</span>
+                  <span class="picker__sublabel">Save €500 this month</span>
+                </button>
+              </div>
+            </fieldset>
+          </div>
+
+          <div class="field" data-schedule-field="weekdays" hidden>
+            <label class="field__label">Which days?</label>
+            <div class="day-picker" data-day-picker>
+              <button type="button" class="day-picker__day" data-day="1" aria-pressed="false" aria-label="Monday">M</button>
+              <button type="button" class="day-picker__day" data-day="2" aria-pressed="false" aria-label="Tuesday">T</button>
+              <button type="button" class="day-picker__day" data-day="3" aria-pressed="false" aria-label="Wednesday">W</button>
+              <button type="button" class="day-picker__day" data-day="4" aria-pressed="false" aria-label="Thursday">T</button>
+              <button type="button" class="day-picker__day" data-day="5" aria-pressed="false" aria-label="Friday">F</button>
+              <button type="button" class="day-picker__day" data-day="6" aria-pressed="false" aria-label="Saturday">S</button>
+              <button type="button" class="day-picker__day" data-day="7" aria-pressed="false" aria-label="Sunday">S</button>
+            </div>
+          </div>
+
+          <div class="field" data-schedule-field="weekly" hidden>
+            <label class="field__label" for="weekly-count">Times per week (optional)</label>
+            <input
+              class="field__input"
+              type="number"
+              id="weekly-count"
+              name="weekly-count"
+              min="1"
+              max="7"
+              placeholder="e.g., 4"
+            />
+          </div>
+
+          <div class="field" data-schedule-field="monthly" hidden>
+            <label class="field__label" for="monthly-count">Times per month (optional)</label>
+            <input
+              class="field__input"
+              type="number"
+              id="monthly-count"
+              name="monthly-count"
+              min="1"
+              max="31"
+              placeholder="e.g., 4"
+            />
+          </div>
+
+          <p class="form-error" role="alert" hidden></p>
+
+          <footer class="sheet__footer">
+            <button type="button" class="btn btn--ghost" data-close>Cancel</button>
+            <button type="submit" class="btn btn--primary" data-save hidden>Save habit</button>
+          </footer>
+        </form>
+      </section>
     </div>
 
     <script type="module" src="js/main.js"></script>
