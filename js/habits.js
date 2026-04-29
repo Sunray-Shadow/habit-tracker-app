@@ -112,6 +112,12 @@ function openSheet(sheetEl) {
     b.classList.remove('day-picker__day--selected');
     b.setAttribute('aria-pressed', 'false');
   });
+  sheetEl.querySelectorAll('[data-extras-toggle]').forEach((b) => {
+    b.setAttribute('aria-expanded', 'false');
+  });
+  sheetEl.querySelectorAll('[data-extras-content]').forEach((el) => {
+    el.hidden = true;
+  });
   resetOptionsList(form);
   hideError(form);
 
@@ -176,6 +182,16 @@ function bindSheet(sheetEl, onSaved) {
 
   sheetEl.querySelector('[data-add-option]').addEventListener('click', () => {
     addOptionRow(form);
+  });
+
+  sheetEl.querySelectorAll('[data-extras-toggle]').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const name = btn.dataset.extrasToggle;
+      const content = sheetEl.querySelector(`[data-extras-content="${name}"]`);
+      const expanded = btn.getAttribute('aria-expanded') === 'true';
+      btn.setAttribute('aria-expanded', String(!expanded));
+      if (content) content.hidden = expanded;
+    });
   });
 
   form.addEventListener('submit', (e) => {

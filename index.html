@@ -203,30 +203,41 @@
               />
             </div>
 
-            <div class="field field__group" data-type-field="number" hidden>
-              <div>
-                <label class="field__label" for="habit-unit">Unit (optional)</label>
-                <input
-                  class="field__input"
-                  type="text"
-                  id="habit-unit"
-                  name="unit"
-                  placeholder="e.g., pages, km, €"
-                  maxlength="20"
-                  autocomplete="off"
-                />
-              </div>
-              <div>
-                <label class="field__label" for="habit-target">Daily target (optional)</label>
-                <input
-                  class="field__input"
-                  type="number"
-                  id="habit-target"
-                  name="target"
-                  placeholder="e.g., 10"
-                  min="0"
-                  step="any"
-                />
+            <div class="field" data-type-field="number" hidden>
+              <button
+                type="button"
+                class="extras-toggle"
+                data-extras-toggle="number"
+                aria-expanded="false"
+              >
+                <span class="extras-toggle__icon" aria-hidden="true">+</span>
+                <span>Add unit or daily target</span>
+              </button>
+              <div class="field__group" data-extras-content="number" hidden>
+                <div>
+                  <label class="field__label" for="habit-unit">Unit</label>
+                  <input
+                    class="field__input"
+                    type="text"
+                    id="habit-unit"
+                    name="unit"
+                    placeholder="e.g., pages, km, €"
+                    maxlength="20"
+                    autocomplete="off"
+                  />
+                </div>
+                <div>
+                  <label class="field__label" for="habit-target">Daily target</label>
+                  <input
+                    class="field__input"
+                    type="number"
+                    id="habit-target"
+                    name="target"
+                    placeholder="e.g., 10"
+                    min="0"
+                    step="any"
+                  />
+                </div>
               </div>
             </div>
 
