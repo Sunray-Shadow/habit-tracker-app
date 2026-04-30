@@ -1,6 +1,8 @@
 import {
   listHabits,
   createHabit,
+  updateHabit,
+  archiveHabit,
   isHabitDueOn,
   dateKey,
   getLogEntry,
@@ -23,6 +25,12 @@ const DAY_SHORT = {
   5: 'Fri', 6: 'Sat', 7: 'Sun',
 };
 
+let sheetMode = 'create';
+let sheetHabitId = null;
+let menuDocListenerAttached = false;
+
+// --- mounts ---------------------------------------------------------------
+
 export function mountTodayScreen() {
   const listEl = document.getElementById('habit-list');
   const emptyEl = document.getElementById('today-empty');
@@ -31,12 +39,11 @@ export function mountTodayScreen() {
 
   if (!listEl || !fabEl || !sheetEl) return;
 
-  const refresh = () => renderList(listEl, emptyEl);
+  ensureMenuDocListener();
 
+  const refresh = () => renderList(listEl, emptyEl, sheetEl);
   bindSheet(sheetEl, refresh);
-
   fabEl.addEventListener('click', () => openSheet(sheetEl));
-
   refresh();
 }
 
@@ -48,54 +55,15 @@ export function mountHabitsScreen() {
 
   if (!listEl || !fabEl || !sheetEl) return;
 
-  const refresh = () => renderHabitsList(listEl, emptyEl);
+  ensureMenuDocListener();
 
+  const refresh = () => renderHabitsList(listEl, emptyEl, sheetEl);
   bindSheet(sheetEl, refresh);
-
   fabEl.addEventListener('click', () => openSheet(sheetEl));
-
   refresh();
 }
 
-function renderHabitsList(listEl, emptyEl) {
-  const habits = sortByFrequency(listHabits());
-
-  listEl.replaceChildren();
-
-  if (habits.length === 0) {
-    if (emptyEl) emptyEl.hidden = false;
-    listEl.hidden = true;
-    return;
-  }
-
-  if (emptyEl) emptyEl.hidden = true;
-  listEl.hidden = false;
-
-  for (const habit of habits) {
-    listEl.appendChild(manageCardItem(habit));
-  }
-}
-
-function manageCardItem(habit) {
-  const li = document.createElement('li');
-  li.className = 'habit-list__item';
-
-  const card = document.createElement('article');
-  card.className = 'habit-card habit-card--manage';
-
-  const name = document.createElement('h3');
-  name.className = 'habit-card__name';
-  name.textContent = habit.name;
-  card.appendChild(name);
-
-  const meta = document.createElement('p');
-  meta.className = 'habit-card__meta';
-  meta.textContent = formatMeta(habit);
-  card.appendChild(meta);
-
-  li.appendChild(card);
-  return li;
-}
+// --- frequency ranking ----------------------------------------------------
 
 function frequencyScore(habit) {
   const s = habit.schedule;
@@ -117,7 +85,9 @@ function sortByFrequency(habits) {
   });
 }
 
-function renderList(listEl, emptyEl) {
+// --- list rendering -------------------------------------------------------
+
+function renderList(listEl, emptyEl, sheetEl) {
   const today = new Date();
   const todayKey = dateKey(today);
   const habits = sortByFrequency(
@@ -135,26 +105,43 @@ function renderList(listEl, emptyEl) {
   if (emptyEl) emptyEl.hidden = true;
   listEl.hidden = false;
 
+  const refresh = () => renderList(listEl, emptyEl, sheetEl);
+
   for (const habit of habits) {
-    listEl.appendChild(habitListItem(habit, todayKey));
+    listEl.appendChild(habitListItem(habit, todayKey, sheetEl, refresh));
   }
 }
 
-function habitListItem(habit, todayKey) {
+function renderHabitsList(listEl, emptyEl, sheetEl) {
+  const habits = sortByFrequency(listHabits());
+
+  listEl.replaceChildren();
+
+  if (habits.length === 0) {
+    if (emptyEl) emptyEl.hidden = false;
+    listEl.hidden = true;
+    return;
+  }
+
+  if (emptyEl) emptyEl.hidden = true;
+  listEl.hidden = false;
+
+  const refresh = () => renderHabitsList(listEl, emptyEl, sheetEl);
+
+  for (const habit of habits) {
+    listEl.appendChild(manageCardItem(habit, sheetEl, refresh));
+  }
+}
+
+function habitListItem(habit, todayKey, sheetEl, refresh) {
   const li = document.createElement('li');
   li.className = 'habit-list__item';
 
   const card = document.createElement('article');
   card.className = 'habit-card';
 
-  const check = document.createElement('button');
-  check.type = 'button';
-  check.className = 'habit-card__check';
-  check.setAttribute('aria-label', `Undo log for ${habit.name}`);
-  check.title = 'Undo';
-  check.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12 4 4 10-10"/></svg>';
-  check.hidden = true;
-  card.appendChild(check);
+  const { wrap: actions, checkBtn } = buildCardActions(habit, sheetEl, refresh, { withCheck: true });
+  card.appendChild(actions);
 
   const name = document.createElement('h3');
   name.className = 'habit-card__name';
@@ -173,7 +160,7 @@ function habitListItem(habit, todayKey) {
   const setLoggedState = (val) => {
     const isLogged = val !== null && val !== false && val !== '';
     card.classList.toggle('habit-card--logged', isLogged);
-    check.hidden = !isLogged;
+    if (checkBtn) checkBtn.hidden = !isLogged;
   };
 
   const renderInput = () => {
@@ -196,10 +183,36 @@ function habitListItem(habit, todayKey) {
 
   renderInput();
 
-  check.addEventListener('click', () => {
-    clearLogEntry(todayKey, habit.id);
-    renderInput();
-  });
+  if (checkBtn) {
+    checkBtn.addEventListener('click', () => {
+      clearLogEntry(todayKey, habit.id);
+      renderInput();
+    });
+  }
+
+  li.appendChild(card);
+  return li;
+}
+
+function manageCardItem(habit, sheetEl, refresh) {
+  const li = document.createElement('li');
+  li.className = 'habit-list__item';
+
+  const card = document.createElement('article');
+  card.className = 'habit-card habit-card--manage';
+
+  const { wrap: actions } = buildCardActions(habit, sheetEl, refresh, { withCheck: false });
+  card.appendChild(actions);
+
+  const name = document.createElement('h3');
+  name.className = 'habit-card__name';
+  name.textContent = habit.name;
+  card.appendChild(name);
+
+  const meta = document.createElement('p');
+  meta.className = 'habit-card__meta';
+  meta.textContent = formatMeta(habit);
+  card.appendChild(meta);
 
   li.appendChild(card);
   return li;
@@ -230,10 +243,221 @@ function formatSchedule(schedule) {
   }
 }
 
+// --- per-card actions menu (Edit / Archive) -------------------------------
+
+function buildCardActions(habit, sheetEl, refresh, { withCheck }) {
+  const wrap = document.createElement('div');
+  wrap.className = 'habit-card__actions';
+
+  let checkBtn = null;
+  if (withCheck) {
+    checkBtn = document.createElement('button');
+    checkBtn.type = 'button';
+    checkBtn.className = 'habit-card__check';
+    checkBtn.setAttribute('aria-label', `Undo log for ${habit.name}`);
+    checkBtn.title = 'Undo';
+    checkBtn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12 4 4 10-10"/></svg>';
+    checkBtn.hidden = true;
+    wrap.appendChild(checkBtn);
+  }
+
+  const menuWrap = document.createElement('div');
+  menuWrap.className = 'habit-card__menu-wrap';
+
+  const menuBtn = document.createElement('button');
+  menuBtn.type = 'button';
+  menuBtn.className = 'habit-card__menu';
+  menuBtn.setAttribute('aria-label', `${habit.name} menu`);
+  menuBtn.setAttribute('aria-haspopup', 'menu');
+  menuBtn.setAttribute('aria-expanded', 'false');
+  menuBtn.innerHTML = '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="12" cy="6" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="12" cy="18" r="1.5"/></svg>';
+
+  const menu = document.createElement('div');
+  menu.className = 'habit-menu';
+  menu.setAttribute('role', 'menu');
+  menu.hidden = true;
+
+  const editItem = document.createElement('button');
+  editItem.type = 'button';
+  editItem.className = 'habit-menu__item';
+  editItem.setAttribute('role', 'menuitem');
+  editItem.dataset.action = 'edit';
+  editItem.textContent = 'Edit';
+
+  const archiveItem = document.createElement('button');
+  archiveItem.type = 'button';
+  archiveItem.className = 'habit-menu__item habit-menu__item--danger';
+  archiveItem.setAttribute('role', 'menuitem');
+  archiveItem.dataset.action = 'archive';
+  archiveItem.textContent = 'Archive';
+
+  menu.appendChild(editItem);
+  menu.appendChild(archiveItem);
+
+  menuBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    const wasHidden = menu.hidden;
+    closeAllMenus();
+    if (wasHidden) {
+      menu.hidden = false;
+      menuBtn.setAttribute('aria-expanded', 'true');
+    }
+  });
+
+  editItem.addEventListener('click', () => {
+    openSheetForEdit(sheetEl, habit, refresh);
+  });
+
+  archiveItem.addEventListener('click', () => {
+    confirmArchive(habit, refresh);
+  });
+
+  menuWrap.appendChild(menuBtn);
+  menuWrap.appendChild(menu);
+  wrap.appendChild(menuWrap);
+
+  return { wrap, checkBtn };
+}
+
+function closeAllMenus() {
+  document.querySelectorAll('.habit-menu:not([hidden])').forEach((menu) => {
+    menu.hidden = true;
+    const btn = menu.parentElement?.querySelector('.habit-card__menu');
+    if (btn) btn.setAttribute('aria-expanded', 'false');
+  });
+}
+
+function ensureMenuDocListener() {
+  if (menuDocListenerAttached) return;
+  menuDocListenerAttached = true;
+  document.addEventListener('click', closeAllMenus);
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') closeAllMenus();
+  });
+}
+
+function confirmArchive(habit, refresh) {
+  const ok = window.confirm(
+    `Archive "${habit.name}"?\n\nIt will disappear from Today and Habits, but its log history is kept.`
+  );
+  if (!ok) return;
+  archiveHabit(habit.id);
+  refresh();
+}
+
+// --- sheet: open / close --------------------------------------------------
+
 function openSheet(sheetEl) {
+  sheetMode = 'create';
+  sheetHabitId = null;
+
   const form = sheetEl.querySelector('form');
   form.reset();
+  resetSheetUi(sheetEl);
 
+  sheetEl.querySelector('.sheet__title').textContent = 'New habit';
+  const saveBtn = sheetEl.querySelector('[data-save]');
+  saveBtn.textContent = 'Save habit';
+  saveBtn.hidden = true;
+
+  const stage = sheetEl.querySelector('[data-stage="after-type"]');
+  if (stage) stage.hidden = true;
+
+  sheetEl.hidden = false;
+  document.body.classList.add('is-sheet-open');
+
+  requestAnimationFrame(() => {
+    sheetEl.querySelector('input[name="name"]')?.focus();
+  });
+}
+
+function openSheetForEdit(sheetEl, habit, onSaved) {
+  sheetMode = 'edit';
+  sheetHabitId = habit.id;
+
+  const form = sheetEl.querySelector('form');
+  form.reset();
+  resetSheetUi(sheetEl);
+
+  sheetEl.querySelector('.sheet__title').textContent = 'Edit habit';
+  const saveBtn = sheetEl.querySelector('[data-save]');
+  saveBtn.textContent = 'Save changes';
+  saveBtn.hidden = false;
+
+  form.querySelector('input[name="name"]').value = habit.name;
+
+  setPickerSelection(sheetEl, 'type', habit.type);
+  showFields(sheetEl, 'type', habit.type);
+  sheetEl.querySelector('[data-picker="type"]').classList.add('picker--locked');
+
+  if (habit.type === 'number' && (habit.unit || habit.target != null)) {
+    const toggle = sheetEl.querySelector('[data-extras-toggle="number"]');
+    const content = sheetEl.querySelector('[data-extras-content="number"]');
+    toggle.setAttribute('aria-expanded', 'true');
+    content.hidden = false;
+    if (habit.unit) form.querySelector('input[name="unit"]').value = habit.unit;
+    if (habit.target != null) form.querySelector('input[name="target"]').value = habit.target;
+  } else if (habit.type === 'scale' && habit.scale) {
+    const min = form.querySelector('input[name="scale-min"]');
+    const max = form.querySelector('input[name="scale-max"]');
+    min.value = habit.scale.min;
+    max.value = habit.scale.max;
+    min.disabled = true;
+    max.disabled = true;
+  } else if (habit.type === 'choices' && Array.isArray(habit.options)) {
+    const list = form.querySelector('[data-options-list]');
+    list.replaceChildren();
+    for (const opt of habit.options) {
+      const row = document.createElement('div');
+      row.className = 'options-input__row';
+      row.dataset.optionRow = '';
+
+      const input = document.createElement('input');
+      input.className = 'field__input';
+      input.type = 'text';
+      input.name = 'option';
+      input.value = opt;
+      input.disabled = true;
+
+      row.appendChild(input);
+      list.appendChild(row);
+    }
+    sheetEl.querySelector('[data-add-option]').hidden = true;
+  }
+
+  setPickerSelection(sheetEl, 'schedule', habit.schedule.kind);
+  showFields(sheetEl, 'schedule', habit.schedule.kind);
+
+  if (habit.schedule.kind === 'weekdays' && Array.isArray(habit.schedule.days)) {
+    sheetEl.querySelectorAll('[data-day]').forEach((b) => {
+      const day = Number(b.dataset.day);
+      if (habit.schedule.days.includes(day)) {
+        b.classList.add('day-picker__day--selected');
+        b.setAttribute('aria-pressed', 'true');
+      }
+    });
+  } else if (habit.schedule.kind === 'weekly' && habit.schedule.count != null) {
+    form.querySelector('input[name="weekly-count"]').value = habit.schedule.count;
+  } else if (habit.schedule.kind === 'monthly' && habit.schedule.count != null) {
+    form.querySelector('input[name="monthly-count"]').value = habit.schedule.count;
+  }
+
+  const stage = sheetEl.querySelector('[data-stage="after-type"]');
+  if (stage) stage.hidden = false;
+
+  sheetEl.hidden = false;
+  document.body.classList.add('is-sheet-open');
+
+  // Stash the post-save callback so submit knows what to refresh.
+  sheetEl.__onSaved = onSaved;
+}
+
+function closeSheet(sheetEl) {
+  sheetEl.hidden = true;
+  document.body.classList.remove('is-sheet-open');
+}
+
+function resetSheetUi(sheetEl) {
   sheetEl.querySelectorAll('.picker__option--selected').forEach((b) => {
     b.classList.remove('picker__option--selected');
     b.setAttribute('aria-pressed', 'false');
@@ -251,29 +475,30 @@ function openSheet(sheetEl) {
   sheetEl.querySelectorAll('[data-extras-content]').forEach((el) => {
     el.hidden = true;
   });
-  resetOptionsList(form);
-  hideError(form);
 
-  const stage = sheetEl.querySelector('[data-stage="after-type"]');
-  if (stage) stage.hidden = true;
+  resetOptionsList(sheetEl.querySelector('form'));
+  hideError(sheetEl.querySelector('form'));
 
-  const saveBtn = sheetEl.querySelector('[data-save]');
-  if (saveBtn) saveBtn.hidden = true;
+  sheetEl.querySelector('[data-picker="type"]').classList.remove('picker--locked');
 
-  sheetEl.hidden = false;
-  document.body.classList.add('is-sheet-open');
-
-  requestAnimationFrame(() => {
-    sheetEl.querySelector('input[name="name"]')?.focus();
+  sheetEl.querySelectorAll('input[name="scale-min"], input[name="scale-max"]').forEach((i) => {
+    i.disabled = false;
   });
+
+  const addOption = sheetEl.querySelector('[data-add-option]');
+  if (addOption) addOption.hidden = false;
 }
 
-function closeSheet(sheetEl) {
-  sheetEl.hidden = true;
-  document.body.classList.remove('is-sheet-open');
-}
+// --- sheet: bind handlers (once) ------------------------------------------
 
 function bindSheet(sheetEl, onSaved) {
+  if (sheetEl.dataset.bound === '1') {
+    sheetEl.__onSaved = onSaved;
+    return;
+  }
+  sheetEl.dataset.bound = '1';
+  sheetEl.__onSaved = onSaved;
+
   const form = sheetEl.querySelector('form');
 
   sheetEl.querySelectorAll('[data-close]').forEach((el) => {
@@ -285,6 +510,7 @@ function bindSheet(sheetEl, onSaved) {
   });
 
   sheetEl.querySelector('[data-picker="type"]').addEventListener('click', (e) => {
+    if (sheetMode === 'edit') return; // type is locked while editing
     const btn = e.target.closest('[data-value]');
     if (!btn) return;
     setPickerSelection(sheetEl, 'type', btn.dataset.value);
@@ -332,9 +558,13 @@ function bindSheet(sheetEl, onSaved) {
     e.preventDefault();
     const input = readForm(form);
     if (!input) return;
-    createHabit(input);
+    if (sheetMode === 'edit' && sheetHabitId) {
+      updateHabit(sheetHabitId, input);
+    } else {
+      createHabit(input);
+    }
     closeSheet(sheetEl);
-    onSaved();
+    sheetEl.__onSaved?.();
   });
 }
 
@@ -417,8 +647,8 @@ function readForm(form) {
   if (type === 'number') {
     const unit = form.querySelector('input[name="unit"]').value.trim();
     const target = form.querySelector('input[name="target"]').value.trim();
-    if (unit) habit.unit = unit;
-    if (target !== '') habit.target = Number(target);
+    habit.unit = unit || null;
+    habit.target = target !== '' ? Number(target) : null;
   } else if (type === 'scale') {
     const min = Number(form.querySelector('input[name="scale-min"]').value);
     const max = Number(form.querySelector('input[name="scale-max"]').value);
