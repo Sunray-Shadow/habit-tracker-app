@@ -1,4 +1,13 @@
-import { listHabits, createHabit, isHabitDueOn } from './store.js';
+import {
+  listHabits,
+  createHabit,
+  isHabitDueOn,
+  dateKey,
+  getLogEntry,
+  setLogEntry,
+  clearLogEntry,
+} from './store.js';
+import { createLogInput } from './log.js';
 
 const TYPE_LABELS = {
   toggle: 'Yes / No',
@@ -33,6 +42,7 @@ export function mountTodayScreen() {
 
 function renderList(listEl, emptyEl) {
   const today = new Date();
+  const todayKey = dateKey(today);
   const habits = listHabits().filter((h) => isHabitDueOn(h, today));
 
   listEl.replaceChildren();
@@ -47,16 +57,25 @@ function renderList(listEl, emptyEl) {
   listEl.hidden = false;
 
   for (const habit of habits) {
-    listEl.appendChild(habitListItem(habit));
+    listEl.appendChild(habitListItem(habit, todayKey));
   }
 }
 
-function habitListItem(habit) {
+function habitListItem(habit, todayKey) {
   const li = document.createElement('li');
   li.className = 'habit-list__item';
 
   const card = document.createElement('article');
   card.className = 'habit-card';
+
+  const check = document.createElement('button');
+  check.type = 'button';
+  check.className = 'habit-card__check';
+  check.setAttribute('aria-label', `Undo log for ${habit.name}`);
+  check.title = 'Undo';
+  check.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12 4 4 10-10"/></svg>';
+  check.hidden = true;
+  card.appendChild(check);
 
   const name = document.createElement('h3');
   name.className = 'habit-card__name';
@@ -67,6 +86,41 @@ function habitListItem(habit) {
   meta.className = 'habit-card__meta';
   meta.textContent = formatMeta(habit);
   card.appendChild(meta);
+
+  const inputWrap = document.createElement('div');
+  inputWrap.className = 'habit-card__log';
+  card.appendChild(inputWrap);
+
+  const setLoggedState = (val) => {
+    const isLogged = val !== null && val !== false && val !== '';
+    card.classList.toggle('habit-card--logged', isLogged);
+    check.hidden = !isLogged;
+  };
+
+  const renderInput = () => {
+    const entry = getLogEntry(todayKey, habit.id);
+    const initialValue = entry?.value ?? null;
+    setLoggedState(initialValue);
+
+    inputWrap.replaceChildren();
+    inputWrap.appendChild(
+      createLogInput(habit, initialValue, (newValue) => {
+        if (newValue === null || newValue === '') {
+          clearLogEntry(todayKey, habit.id);
+        } else {
+          setLogEntry(todayKey, habit.id, newValue);
+        }
+        setLoggedState(newValue);
+      })
+    );
+  };
+
+  renderInput();
+
+  check.addEventListener('click', () => {
+    clearLogEntry(todayKey, habit.id);
+    renderInput();
+  });
 
   li.appendChild(card);
   return li;

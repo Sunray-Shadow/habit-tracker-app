@@ -3,6 +3,7 @@
 // cloud backend later, only this file changes; the rest of the app stays put.
 
 const KEY_HABITS = 'ht/habits';
+const KEY_LOG = 'ht/log';
 
 function read(key, fallback) {
   try {
@@ -60,4 +61,32 @@ export function isHabitDueOn(habit, date) {
     return Array.isArray(schedule.days) && schedule.days.includes(iso);
   }
   return true;
+}
+
+export function dateKey(date) {
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, '0');
+  const d = String(date.getDate()).padStart(2, '0');
+  return `${y}-${m}-${d}`;
+}
+
+export function getLogEntry(key, habitId) {
+  const log = read(KEY_LOG, {});
+  return log[key]?.[habitId] ?? null;
+}
+
+export function setLogEntry(key, habitId, value) {
+  const log = read(KEY_LOG, {});
+  if (!log[key]) log[key] = {};
+  log[key][habitId] = { value, loggedAt: nowIso() };
+  write(KEY_LOG, log);
+  return log[key][habitId];
+}
+
+export function clearLogEntry(key, habitId) {
+  const log = read(KEY_LOG, {});
+  if (!log[key]) return;
+  delete log[key][habitId];
+  if (Object.keys(log[key]).length === 0) delete log[key];
+  write(KEY_LOG, log);
 }
