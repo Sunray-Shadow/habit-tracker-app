@@ -333,9 +333,33 @@ body {
 
 .log-number {
   display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.log-number__row {
+  display: flex;
   align-items: center;
   flex-wrap: wrap;
   gap: var(--space-2);
+}
+
+.log-number__row .log-submit {
+  margin-left: auto;
+}
+
+.log-number__display {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-2);
+}
+
+.log-number__value {
+  font-family: var(--font-display);
+  font-size: var(--text-2xl);
+  font-weight: var(--weight-medium);
+  letter-spacing: var(--tracking-tight);
+  color: var(--color-accent-strong);
 }
 
 .log-stepper-btn {
@@ -387,6 +411,16 @@ body {
   color: var(--color-text-muted);
 }
 
+.log-text {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.log-text .log-submit {
+  align-self: flex-end;
+}
+
 .log-text__input {
   width: 100%;
   padding: var(--space-3) var(--space-4);
@@ -398,6 +432,46 @@ body {
   border-radius: var(--radius-md);
   resize: vertical;
   min-height: 72px;
+}
+
+.log-text__display {
+  padding: var(--space-3) var(--space-4);
+  background: var(--color-surface);
+  border-left: 3px solid var(--color-accent);
+  border-radius: var(--radius-md);
+  font-family: inherit;
+  font-size: var(--text-base);
+  color: var(--color-text);
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.log-submit {
+  padding: var(--space-2) var(--space-4);
+  background: var(--color-accent);
+  color: var(--color-accent-contrast);
+  border: none;
+  border-radius: var(--radius-pill);
+  font-family: inherit;
+  font-size: var(--text-sm);
+  font-weight: var(--weight-medium);
+  cursor: pointer;
+  transition: background-color var(--duration-base) var(--ease-out),
+              transform var(--duration-fast) var(--ease-out);
+}
+
+.log-submit:hover:not(:disabled) {
+  background: var(--color-accent-strong);
+}
+
+.log-submit:active:not(:disabled) {
+  transform: scale(0.97);
+}
+
+.log-submit:disabled {
+  background: var(--color-border);
+  color: var(--color-text-subtle);
+  cursor: not-allowed;
 }
 
 .log-text__input::placeholder {

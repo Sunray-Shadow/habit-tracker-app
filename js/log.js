@@ -52,71 +52,113 @@ function renderNumber(habit, currentValue, onChange) {
   const wrap = document.createElement('div');
   wrap.className = 'log-number';
 
-  const minus = document.createElement('button');
-  minus.type = 'button';
-  minus.className = 'log-stepper-btn';
-  minus.setAttribute('aria-label', 'Decrease');
-  minus.innerHTML = ICONS.minus;
+  let pending = currentValue ?? null;
 
-  const input = document.createElement('input');
-  input.type = 'number';
-  input.className = 'log-number__input';
-  input.placeholder = '0';
-  input.step = 'any';
-  input.value = currentValue ?? '';
-
-  const plus = document.createElement('button');
-  plus.type = 'button';
-  plus.className = 'log-stepper-btn';
-  plus.setAttribute('aria-label', 'Increase');
-  plus.innerHTML = ICONS.plus;
-
-  wrap.appendChild(minus);
-  wrap.appendChild(input);
-  wrap.appendChild(plus);
-
-  if (habit.target != null || habit.unit) {
+  const buildMeta = () => {
+    if (habit.target == null && !habit.unit) return null;
     const meta = document.createElement('span');
     meta.className = 'log-number__meta';
     const parts = [];
     if (habit.target != null) parts.push(`/ ${habit.target}`);
     if (habit.unit) parts.push(habit.unit);
     meta.textContent = parts.join(' ');
-    wrap.appendChild(meta);
-  }
-
-  const commit = (raw) => {
-    if (raw === '' || raw === null || raw === undefined) {
-      onChange(null);
-      return;
-    }
-    const num = Number(raw);
-    if (!Number.isNaN(num)) onChange(num);
+    return meta;
   };
 
-  let timer;
-  input.addEventListener('input', () => {
-    clearTimeout(timer);
-    timer = setTimeout(() => commit(input.value), 400);
-  });
-  input.addEventListener('blur', () => {
-    clearTimeout(timer);
-    commit(input.value);
-  });
+  const renderEdit = () => {
+    wrap.replaceChildren();
 
-  minus.addEventListener('click', () => {
-    const cur = Number(input.value || 0);
-    const next = Math.max(0, cur - 1);
-    input.value = String(next);
-    commit(next);
-  });
+    const row = document.createElement('div');
+    row.className = 'log-number__row';
 
-  plus.addEventListener('click', () => {
-    const cur = Number(input.value || 0);
-    const next = cur + 1;
-    input.value = String(next);
-    commit(next);
-  });
+    const minus = document.createElement('button');
+    minus.type = 'button';
+    minus.className = 'log-stepper-btn';
+    minus.setAttribute('aria-label', 'Decrease');
+    minus.innerHTML = ICONS.minus;
+
+    const input = document.createElement('input');
+    input.type = 'number';
+    input.className = 'log-number__input';
+    input.placeholder = '0';
+    input.step = 'any';
+    input.value = pending ?? '';
+
+    const plus = document.createElement('button');
+    plus.type = 'button';
+    plus.className = 'log-stepper-btn';
+    plus.setAttribute('aria-label', 'Increase');
+    plus.innerHTML = ICONS.plus;
+
+    const save = document.createElement('button');
+    save.type = 'button';
+    save.className = 'log-submit';
+    save.textContent = 'Save';
+
+    const updateSave = () => {
+      const raw = input.value.trim();
+      save.disabled = raw === '' || Number.isNaN(Number(raw));
+    };
+
+    const submit = () => {
+      const raw = input.value.trim();
+      if (raw === '') return;
+      const num = Number(raw);
+      if (Number.isNaN(num)) return;
+      pending = num;
+      onChange(num);
+      renderDisplay();
+    };
+
+    save.addEventListener('click', submit);
+    input.addEventListener('input', updateSave);
+    input.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        submit();
+      }
+    });
+    minus.addEventListener('click', () => {
+      const cur = Number(input.value || 0);
+      input.value = String(Math.max(0, cur - 1));
+      updateSave();
+    });
+    plus.addEventListener('click', () => {
+      const cur = Number(input.value || 0);
+      input.value = String(cur + 1);
+      updateSave();
+    });
+
+    updateSave();
+
+    row.appendChild(minus);
+    row.appendChild(input);
+    row.appendChild(plus);
+    row.appendChild(save);
+    wrap.appendChild(row);
+
+    const meta = buildMeta();
+    if (meta) wrap.appendChild(meta);
+  };
+
+  const renderDisplay = () => {
+    wrap.replaceChildren();
+    const display = document.createElement('div');
+    display.className = 'log-number__display';
+
+    const value = document.createElement('span');
+    value.className = 'log-number__value';
+    value.textContent = String(pending);
+    display.appendChild(value);
+
+    const meta = buildMeta();
+    if (meta) display.appendChild(meta);
+
+    wrap.appendChild(display);
+  };
+
+  if (pending != null) renderDisplay();
+  else renderEdit();
 
   return wrap;
 }
@@ -125,27 +167,59 @@ function renderText(habit, currentValue, onChange) {
   const wrap = document.createElement('div');
   wrap.className = 'log-text';
 
-  const textarea = document.createElement('textarea');
-  textarea.className = 'log-text__input';
-  textarea.placeholder = 'Write something…';
-  textarea.rows = 2;
-  textarea.value = currentValue ?? '';
+  let pending = currentValue ?? null;
 
-  wrap.appendChild(textarea);
+  const renderEdit = () => {
+    wrap.replaceChildren();
 
-  let timer;
-  const commit = () => {
-    const v = textarea.value.trim();
-    onChange(v || null);
+    const textarea = document.createElement('textarea');
+    textarea.className = 'log-text__input';
+    textarea.placeholder = 'Write something… (Enter to save, Shift+Enter for new line)';
+    textarea.rows = 2;
+    textarea.value = pending ?? '';
+
+    const save = document.createElement('button');
+    save.type = 'button';
+    save.className = 'log-submit';
+    save.textContent = 'Save';
+
+    const updateSave = () => {
+      save.disabled = textarea.value.trim() === '';
+    };
+
+    const submit = () => {
+      const v = textarea.value.trim();
+      if (!v) return;
+      pending = v;
+      onChange(v);
+      renderDisplay();
+    };
+
+    save.addEventListener('click', submit);
+    textarea.addEventListener('input', updateSave);
+    textarea.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        submit();
+      }
+    });
+
+    updateSave();
+
+    wrap.appendChild(textarea);
+    wrap.appendChild(save);
   };
-  textarea.addEventListener('input', () => {
-    clearTimeout(timer);
-    timer = setTimeout(commit, 500);
-  });
-  textarea.addEventListener('blur', () => {
-    clearTimeout(timer);
-    commit();
-  });
+
+  const renderDisplay = () => {
+    wrap.replaceChildren();
+    const display = document.createElement('p');
+    display.className = 'log-text__display';
+    display.textContent = pending;
+    wrap.appendChild(display);
+  };
+
+  if (pending) renderDisplay();
+  else renderEdit();
 
   return wrap;
 }
