@@ -40,6 +40,63 @@ export function mountTodayScreen() {
   refresh();
 }
 
+export function mountHabitsScreen() {
+  const listEl = document.getElementById('habits-list');
+  const emptyEl = document.getElementById('habits-empty');
+  const fabEl = document.getElementById('add-habit-fab');
+  const sheetEl = document.getElementById('habit-sheet');
+
+  if (!listEl || !fabEl || !sheetEl) return;
+
+  const refresh = () => renderHabitsList(listEl, emptyEl);
+
+  bindSheet(sheetEl, refresh);
+
+  fabEl.addEventListener('click', () => openSheet(sheetEl));
+
+  refresh();
+}
+
+function renderHabitsList(listEl, emptyEl) {
+  const habits = sortByFrequency(listHabits());
+
+  listEl.replaceChildren();
+
+  if (habits.length === 0) {
+    if (emptyEl) emptyEl.hidden = false;
+    listEl.hidden = true;
+    return;
+  }
+
+  if (emptyEl) emptyEl.hidden = true;
+  listEl.hidden = false;
+
+  for (const habit of habits) {
+    listEl.appendChild(manageCardItem(habit));
+  }
+}
+
+function manageCardItem(habit) {
+  const li = document.createElement('li');
+  li.className = 'habit-list__item';
+
+  const card = document.createElement('article');
+  card.className = 'habit-card habit-card--manage';
+
+  const name = document.createElement('h3');
+  name.className = 'habit-card__name';
+  name.textContent = habit.name;
+  card.appendChild(name);
+
+  const meta = document.createElement('p');
+  meta.className = 'habit-card__meta';
+  meta.textContent = formatMeta(habit);
+  card.appendChild(meta);
+
+  li.appendChild(card);
+  return li;
+}
+
 function frequencyScore(habit) {
   const s = habit.schedule;
   if (!s) return 0;
