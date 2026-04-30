@@ -261,10 +261,23 @@ body {
   justify-content: center;
   width: 24px;
   height: 24px;
+  padding: 0;
   background: var(--color-accent);
   color: var(--color-accent-contrast);
+  border: none;
   border-radius: var(--radius-pill);
   box-shadow: var(--shadow-sm);
+  cursor: pointer;
+  transition: background-color var(--duration-base) var(--ease-out),
+              transform var(--duration-fast) var(--ease-out);
+}
+
+.habit-card__check:hover {
+  background: var(--color-accent-strong);
+}
+
+.habit-card__check:active {
+  transform: scale(0.92);
 }
 
 .habit-card__check svg {
