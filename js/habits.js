@@ -40,10 +40,32 @@ export function mountTodayScreen() {
   refresh();
 }
 
+function frequencyScore(habit) {
+  const s = habit.schedule;
+  if (!s) return 0;
+  switch (s.kind) {
+    case 'daily':    return 7;
+    case 'weekdays': return Array.isArray(s.days) ? s.days.length : 0;
+    case 'weekly':   return s.count ?? 1;
+    case 'monthly':  return (s.count ?? 1) / 4.33;
+    default:         return 0;
+  }
+}
+
+function sortByFrequency(habits) {
+  return habits.slice().sort((a, b) => {
+    const diff = frequencyScore(b) - frequencyScore(a);
+    if (diff !== 0) return diff;
+    return (a.createdAt ?? '') < (b.createdAt ?? '') ? -1 : 1;
+  });
+}
+
 function renderList(listEl, emptyEl) {
   const today = new Date();
   const todayKey = dateKey(today);
-  const habits = listHabits().filter((h) => isHabitDueOn(h, today));
+  const habits = sortByFrequency(
+    listHabits().filter((h) => isHabitDueOn(h, today))
+  );
 
   listEl.replaceChildren();
 
