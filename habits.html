@@ -9,14 +9,14 @@
     <meta name="theme-color" content="#faf8f5" />
     <meta
       name="description"
-      content="A personal habit tracker — log your habits each day and watch trends emerge."
+      content="Manage every habit you've created — edit, archive, and reorder."
     />
-    <title>Today · Habit Tracker</title>
+    <title>Habits · Habit Tracker</title>
     <link rel="stylesheet" href="css/reset.css" />
     <link rel="stylesheet" href="css/tokens.css" />
     <link rel="stylesheet" href="css/app.css" />
   </head>
-  <body data-page="today">
+  <body data-page="habits">
     <div class="app">
       <header class="app-header">
         <h1 class="app-header__title">Habit Tracker</h1>
@@ -25,13 +25,13 @@
       <main class="app-main" id="main">
         <section class="page" aria-labelledby="page-title">
           <header>
-            <h2 id="page-title" class="page__title">Today</h2>
-            <p class="page__subtitle" data-today-date>Today</p>
+            <h2 id="page-title" class="page__title">Habits</h2>
+            <p class="page__subtitle">All your habits, sorted by frequency.</p>
           </header>
 
-          <ul class="habit-list" id="habit-list" hidden></ul>
+          <ul class="habit-list" id="habits-list" hidden></ul>
 
-          <section class="empty-state" id="today-empty" aria-live="polite">
+          <section class="empty-state" id="habits-empty" aria-live="polite">
             <h3 class="empty-state__title">No habits yet</h3>
             <p class="empty-state__body">
               Tap the plus button to create your first habit.
@@ -54,7 +54,7 @@
       </button>
 
       <nav class="app-nav" aria-label="Primary">
-        <a class="app-nav__item" href="index.html" aria-current="page">
+        <a class="app-nav__item" href="index.html">
           <svg
             class="app-nav__icon"
             viewBox="0 0 24 24"
@@ -70,7 +70,7 @@
           </svg>
           <span>Today</span>
         </a>
-        <a class="app-nav__item" href="habits.html">
+        <a class="app-nav__item" href="habits.html" aria-current="page">
           <svg
             class="app-nav__icon"
             viewBox="0 0 24 24"

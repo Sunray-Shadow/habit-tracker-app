@@ -252,10 +252,16 @@ body {
   color: var(--color-text-muted);
 }
 
-.habit-card__check {
+.habit-card__actions {
   position: absolute;
   top: var(--space-4);
   right: var(--space-4);
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.habit-card__check {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -278,6 +284,93 @@ body {
 
 .habit-card__check:active {
   transform: scale(0.92);
+}
+
+.habit-card__menu-wrap {
+  position: relative;
+}
+
+.habit-card__menu {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  background: transparent;
+  border: none;
+  border-radius: var(--radius-pill);
+  color: var(--color-text-muted);
+  cursor: pointer;
+  transition: background-color var(--duration-base) var(--ease-out),
+              color var(--duration-base) var(--ease-out);
+}
+
+.habit-card__menu:hover {
+  background: var(--color-surface-alt);
+  color: var(--color-text);
+}
+
+.habit-card__menu svg {
+  width: 18px;
+  height: 18px;
+}
+
+.habit-menu {
+  position: absolute;
+  top: calc(100% + var(--space-1));
+  right: 0;
+  z-index: 30;
+  display: flex;
+  flex-direction: column;
+  min-width: 140px;
+  padding: var(--space-2);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-md);
+}
+
+.habit-menu__item {
+  display: block;
+  width: 100%;
+  padding: var(--space-2) var(--space-3);
+  background: none;
+  border: none;
+  border-radius: var(--radius-sm);
+  text-align: left;
+  font-family: inherit;
+  font-size: var(--text-sm);
+  color: var(--color-text);
+  cursor: pointer;
+  transition: background-color var(--duration-base) var(--ease-out);
+}
+
+.habit-menu__item:hover {
+  background: var(--color-surface-alt);
+}
+
+.habit-menu__item--danger {
+  color: var(--color-danger);
+}
+
+.habit-menu__item--danger:hover {
+  background: color-mix(in srgb, var(--color-danger) 10%, var(--color-surface));
+}
+
+.picker--locked .picker__option:not(.picker__option--selected) {
+  opacity: 0.4;
+  pointer-events: none;
+}
+
+.picker--locked .picker__option--selected {
+  cursor: default;
+}
+
+.field__input:disabled {
+  background: var(--color-surface-alt);
+  color: var(--color-text-muted);
+  cursor: not-allowed;
 }
 
 .habit-card__check svg {

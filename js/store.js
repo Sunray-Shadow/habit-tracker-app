@@ -52,6 +52,19 @@ export function createHabit(input) {
   return habit;
 }
 
+export function updateHabit(id, patch) {
+  const habits = read(KEY_HABITS, []);
+  const idx = habits.findIndex((h) => h.id === id);
+  if (idx === -1) return null;
+  habits[idx] = { ...habits[idx], ...patch };
+  write(KEY_HABITS, habits);
+  return habits[idx];
+}
+
+export function archiveHabit(id) {
+  return updateHabit(id, { archivedAt: nowIso() });
+}
+
 export function isHabitDueOn(habit, date) {
   const schedule = habit.schedule;
   if (!schedule) return true;
