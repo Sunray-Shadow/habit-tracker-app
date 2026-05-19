@@ -116,6 +116,11 @@ body {
   background: var(--color-surface-active, rgba(0, 0, 0, 0.06));
 }
 
+.app-header__btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
 .visually-hidden {
   position: absolute;
   width: 1px;

@@ -127,11 +127,6 @@ function diffInDays(a, b) {
   return Math.round((a.getTime() - b.getTime()) / 86400000);
 }
 
-function isCreatedAfter(habit, date) {
-  if (!habit.createdAt) return false;
-  return startOfDay(new Date(habit.createdAt)).getTime() > date.getTime();
-}
-
 function dayLabel(date, today) {
   const days = diffInDays(today, date); // positive = past
   if (days === 0) return 'Today';
@@ -151,14 +146,22 @@ function renderDayHeader(date, today) {
   const dateEl = document.querySelector('[data-day-date]');
   if (labelEl) labelEl.textContent = dayLabel(date, today);
   if (dateEl) dateEl.textContent = dayDateLabel(date);
+
+  const nextBtn = document.querySelector('[data-day-next]');
+  if (nextBtn) nextBtn.disabled = date.getTime() >= today.getTime();
 }
 
 function bindDayNav({ getDate, setDate, today }) {
   const prevBtn = document.querySelector('[data-day-prev]');
+  const nextBtn = document.querySelector('[data-day-next]');
   const calBtn = document.querySelector('[data-day-cal]');
 
   if (prevBtn) {
     prevBtn.addEventListener('click', () => setDate(addDays(getDate(), -1)));
+  }
+
+  if (nextBtn) {
+    nextBtn.addEventListener('click', () => setDate(addDays(getDate(), 1)));
   }
 
   if (calBtn) {
@@ -319,7 +322,7 @@ function closeCalendarPopup() {
 function renderList(listEl, emptyEl, sheetEl, date) {
   const dayKey = dateKey(date);
   const habits = sortByFrequency(
-    listHabits().filter((h) => isHabitDueOn(h, date) && !isCreatedAfter(h, date))
+    listHabits().filter((h) => isHabitDueOn(h, date))
   );
 
   listEl.replaceChildren();
