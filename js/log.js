@@ -11,11 +11,11 @@ const EMOJI_OPTIONS = [
   { value: 'sad',     emoji: '\u{1F61E}', label: 'Sad' },
 ];
 
-export function createLogInput(habit, currentValue, onChange) {
+export function createLogInput(habit, currentValue, onChange, options = {}) {
   switch (habit.type) {
     case 'toggle':  return renderToggle(habit, currentValue, onChange);
-    case 'number':  return renderNumber(habit, currentValue, onChange);
-    case 'text':    return renderText(habit, currentValue, onChange);
+    case 'number':  return renderNumber(habit, currentValue, onChange, options);
+    case 'text':    return renderText(habit, currentValue, onChange, options);
     case 'scale':   return renderScale(habit, currentValue, onChange);
     case 'choices': return renderChoices(habit, currentValue, onChange);
     case 'emoji':   return renderEmoji(habit, currentValue, onChange);
@@ -48,7 +48,7 @@ function renderToggle(habit, currentValue, onChange) {
   return btn;
 }
 
-function renderNumber(habit, currentValue, onChange) {
+function renderNumber(habit, currentValue, onChange, options = {}) {
   const wrap = document.createElement('div');
   wrap.className = 'log-number';
 
@@ -157,13 +157,13 @@ function renderNumber(habit, currentValue, onChange) {
     wrap.appendChild(display);
   };
 
-  if (pending != null) renderDisplay();
+  if (pending != null && !options.startInEdit) renderDisplay();
   else renderEdit();
 
   return wrap;
 }
 
-function renderText(habit, currentValue, onChange) {
+function renderText(habit, currentValue, onChange, options = {}) {
   const wrap = document.createElement('div');
   wrap.className = 'log-text';
 
@@ -218,7 +218,7 @@ function renderText(habit, currentValue, onChange) {
     wrap.appendChild(display);
   };
 
-  if (pending) renderDisplay();
+  if (pending && !options.startInEdit) renderDisplay();
   else renderEdit();
 
   return wrap;

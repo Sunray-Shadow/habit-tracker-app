@@ -163,10 +163,11 @@ function habitListItem(habit, todayKey, sheetEl, refresh) {
     if (checkBtn) checkBtn.hidden = !isLogged;
   };
 
-  const renderInput = () => {
+  const renderInput = ({ overrideValue, startInEdit = false } = {}) => {
     const entry = getLogEntry(todayKey, habit.id);
-    const initialValue = entry?.value ?? null;
-    setLoggedState(initialValue);
+    const savedValue = entry?.value ?? null;
+    const initialValue = overrideValue !== undefined ? overrideValue : savedValue;
+    setLoggedState(savedValue);
 
     inputWrap.replaceChildren();
     inputWrap.appendChild(
@@ -177,7 +178,7 @@ function habitListItem(habit, todayKey, sheetEl, refresh) {
           setLogEntry(todayKey, habit.id, newValue);
         }
         setLoggedState(newValue);
-      })
+      }, { startInEdit })
     );
   };
 
@@ -185,8 +186,15 @@ function habitListItem(habit, todayKey, sheetEl, refresh) {
 
   if (checkBtn) {
     checkBtn.addEventListener('click', () => {
+      const previousValue = getLogEntry(todayKey, habit.id)?.value ?? null;
       clearLogEntry(todayKey, habit.id);
-      renderInput();
+      // Toggle is binary — preserving "Done" on a visually unlogged card would
+      // contradict itself, so fall back to a fresh render.
+      if (habit.type === 'toggle') {
+        renderInput();
+      } else {
+        renderInput({ overrideValue: previousValue, startInEdit: true });
+      }
     });
   }
 
