@@ -7,12 +7,3 @@ if (page === 'today') {
 } else if (page === 'habits') {
   mountHabitsScreen();
 }
-
-document.querySelectorAll('[data-today-date]').forEach((el) => {
-  const today = new Date();
-  el.textContent = today.toLocaleDateString(undefined, {
-    weekday: 'long',
-    month: 'long',
-    day: 'numeric',
-  });
-});
