@@ -18,17 +18,39 @@
   </head>
   <body data-page="today">
     <div class="app">
-      <header class="app-header">
-        <h1 class="app-header__title">Habit Tracker</h1>
+      <header class="app-header app-header--today">
+        <button
+          type="button"
+          class="app-header__btn"
+          data-day-prev
+          aria-label="Previous day"
+        >
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="m15 18-6-6 6-6" />
+          </svg>
+        </button>
+        <div class="app-header__heading">
+          <h1 class="app-header__day" data-day-label>Today</h1>
+          <p class="app-header__date" data-day-date>19.05.2026</p>
+        </div>
+        <button
+          type="button"
+          class="app-header__btn"
+          data-day-cal
+          aria-haspopup="dialog"
+          aria-expanded="false"
+          aria-label="Open calendar"
+        >
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <rect x="3" y="5" width="18" height="16" rx="2" />
+            <path d="M3 9h18M8 3v4M16 3v4" />
+          </svg>
+        </button>
       </header>
 
       <main class="app-main" id="main">
         <section class="page" aria-labelledby="page-title">
-          <header>
-            <h2 id="page-title" class="page__title">Today</h2>
-            <p class="page__subtitle" data-today-date>Today</p>
-          </header>
-
+          <h2 id="page-title" class="visually-hidden">Today</h2>
           <ul class="habit-list" id="habit-list" hidden></ul>
 
           <section class="empty-state" id="today-empty" aria-live="polite">

@@ -41,7 +41,27 @@ export function mountTodayScreen() {
 
   ensureMenuDocListener();
 
-  const refresh = () => renderList(listEl, emptyEl, sheetEl);
+  const today = startOfDay(new Date());
+  let selectedDate = today;
+
+  const refresh = () => {
+    renderDayHeader(selectedDate, today);
+    renderList(listEl, emptyEl, sheetEl, selectedDate);
+  };
+
+  const setSelectedDate = (date) => {
+    const clamped = clampToToday(startOfDay(date), today);
+    if (clamped.getTime() === selectedDate.getTime()) return;
+    selectedDate = clamped;
+    refresh();
+  };
+
+  bindDayNav({
+    getDate: () => selectedDate,
+    setDate: setSelectedDate,
+    today,
+  });
+
   bindSheet(sheetEl, refresh);
   fabEl.addEventListener('click', () => openSheet(sheetEl));
   refresh();
@@ -85,13 +105,221 @@ function sortByFrequency(habits) {
   });
 }
 
+// --- day header + nav -----------------------------------------------------
+
+function startOfDay(date) {
+  const d = new Date(date);
+  d.setHours(0, 0, 0, 0);
+  return d;
+}
+
+function addDays(date, n) {
+  const d = new Date(date);
+  d.setDate(d.getDate() + n);
+  return d;
+}
+
+function clampToToday(date, today) {
+  return date.getTime() > today.getTime() ? today : date;
+}
+
+function diffInDays(a, b) {
+  return Math.round((a.getTime() - b.getTime()) / 86400000);
+}
+
+function isCreatedAfter(habit, date) {
+  if (!habit.createdAt) return false;
+  return startOfDay(new Date(habit.createdAt)).getTime() > date.getTime();
+}
+
+function dayLabel(date, today) {
+  const days = diffInDays(today, date); // positive = past
+  if (days === 0) return 'Today';
+  if (days === 1) return 'Yesterday';
+  return date.toLocaleDateString(undefined, { weekday: 'long' });
+}
+
+function dayDateLabel(date) {
+  const d = String(date.getDate()).padStart(2, '0');
+  const m = String(date.getMonth() + 1).padStart(2, '0');
+  const y = date.getFullYear();
+  return `${d}.${m}.${y}`;
+}
+
+function renderDayHeader(date, today) {
+  const labelEl = document.querySelector('[data-day-label]');
+  const dateEl = document.querySelector('[data-day-date]');
+  if (labelEl) labelEl.textContent = dayLabel(date, today);
+  if (dateEl) dateEl.textContent = dayDateLabel(date);
+}
+
+function bindDayNav({ getDate, setDate, today }) {
+  const prevBtn = document.querySelector('[data-day-prev]');
+  const calBtn = document.querySelector('[data-day-cal]');
+
+  if (prevBtn) {
+    prevBtn.addEventListener('click', () => setDate(addDays(getDate(), -1)));
+  }
+
+  if (calBtn) {
+    calBtn.addEventListener('click', () => {
+      if (activeCalendar) {
+        closeCalendarPopup();
+        return;
+      }
+      openCalendarPopup({
+        anchor: calBtn,
+        selected: getDate(),
+        today,
+        onPick: (date) => setDate(date),
+      });
+    });
+  }
+}
+
+// --- custom calendar popup ------------------------------------------------
+
+const MONTH_NAMES = [
+  'January', 'February', 'March', 'April', 'May', 'June',
+  'July', 'August', 'September', 'October', 'November', 'December',
+];
+
+const WEEKDAY_SHORT = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
+
+let activeCalendar = null;
+
+function openCalendarPopup({ anchor, selected, today, onPick }) {
+  closeCalendarPopup();
+
+  const backdrop = document.createElement('div');
+  backdrop.className = 'cal-backdrop';
+
+  const popup = document.createElement('div');
+  popup.className = 'cal-popup';
+  popup.setAttribute('role', 'dialog');
+  popup.setAttribute('aria-label', 'Pick a date');
+
+  let viewMonth = new Date(selected.getFullYear(), selected.getMonth(), 1);
+
+  const header = document.createElement('div');
+  header.className = 'cal-popup__header';
+
+  const prevMonthBtn = document.createElement('button');
+  prevMonthBtn.type = 'button';
+  prevMonthBtn.className = 'cal-popup__nav';
+  prevMonthBtn.setAttribute('aria-label', 'Previous month');
+  prevMonthBtn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg>';
+
+  const title = document.createElement('div');
+  title.className = 'cal-popup__title';
+
+  const nextMonthBtn = document.createElement('button');
+  nextMonthBtn.type = 'button';
+  nextMonthBtn.className = 'cal-popup__nav';
+  nextMonthBtn.setAttribute('aria-label', 'Next month');
+  nextMonthBtn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg>';
+
+  header.appendChild(prevMonthBtn);
+  header.appendChild(title);
+  header.appendChild(nextMonthBtn);
+
+  const weekdays = document.createElement('div');
+  weekdays.className = 'cal-popup__weekdays';
+  for (const w of WEEKDAY_SHORT) {
+    const cell = document.createElement('span');
+    cell.className = 'cal-popup__weekday';
+    cell.textContent = w;
+    weekdays.appendChild(cell);
+  }
+
+  const grid = document.createElement('div');
+  grid.className = 'cal-popup__grid';
+
+  popup.appendChild(header);
+  popup.appendChild(weekdays);
+  popup.appendChild(grid);
+
+  const renderMonth = () => {
+    title.textContent = `${MONTH_NAMES[viewMonth.getMonth()]} ${viewMonth.getFullYear()}`;
+    nextMonthBtn.disabled =
+      viewMonth.getFullYear() > today.getFullYear() ||
+      (viewMonth.getFullYear() === today.getFullYear() &&
+        viewMonth.getMonth() >= today.getMonth());
+
+    grid.replaceChildren();
+
+    const firstOfMonth = new Date(viewMonth.getFullYear(), viewMonth.getMonth(), 1);
+    // Monday-first offset: JS getDay() returns 0 (Sun)..6 (Sat); we want 0 for Mon.
+    const offset = (firstOfMonth.getDay() + 6) % 7;
+    const gridStart = addDays(firstOfMonth, -offset);
+
+    for (let i = 0; i < 42; i++) {
+      const cellDate = startOfDay(addDays(gridStart, i));
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'cal-popup__day';
+      btn.textContent = String(cellDate.getDate());
+
+      const inMonth = cellDate.getMonth() === viewMonth.getMonth();
+      const isFuture = cellDate.getTime() > today.getTime();
+      const isToday = cellDate.getTime() === today.getTime();
+      const isSelected = cellDate.getTime() === selected.getTime();
+
+      if (!inMonth) btn.classList.add('cal-popup__day--muted');
+      if (isToday) btn.classList.add('cal-popup__day--today');
+      if (isSelected) btn.classList.add('cal-popup__day--selected');
+      if (isFuture) btn.disabled = true;
+
+      btn.addEventListener('click', () => {
+        onPick(cellDate);
+        closeCalendarPopup();
+      });
+
+      grid.appendChild(btn);
+    }
+  };
+
+  prevMonthBtn.addEventListener('click', () => {
+    viewMonth = new Date(viewMonth.getFullYear(), viewMonth.getMonth() - 1, 1);
+    renderMonth();
+  });
+  nextMonthBtn.addEventListener('click', () => {
+    viewMonth = new Date(viewMonth.getFullYear(), viewMonth.getMonth() + 1, 1);
+    renderMonth();
+  });
+
+  backdrop.addEventListener('click', closeCalendarPopup);
+
+  const onKey = (e) => {
+    if (e.key === 'Escape') closeCalendarPopup();
+  };
+  document.addEventListener('keydown', onKey);
+
+  document.body.appendChild(backdrop);
+  document.body.appendChild(popup);
+
+  if (anchor) anchor.setAttribute('aria-expanded', 'true');
+
+  activeCalendar = { backdrop, popup, anchor, onKey };
+  renderMonth();
+}
+
+function closeCalendarPopup() {
+  if (!activeCalendar) return;
+  const { backdrop, popup, anchor, onKey } = activeCalendar;
+  backdrop.remove();
+  popup.remove();
+  document.removeEventListener('keydown', onKey);
+  if (anchor) anchor.setAttribute('aria-expanded', 'false');
+  activeCalendar = null;
+}
+
 // --- list rendering -------------------------------------------------------
 
-function renderList(listEl, emptyEl, sheetEl) {
-  const today = new Date();
-  const todayKey = dateKey(today);
+function renderList(listEl, emptyEl, sheetEl, date) {
+  const dayKey = dateKey(date);
   const habits = sortByFrequency(
-    listHabits().filter((h) => isHabitDueOn(h, today))
+    listHabits().filter((h) => isHabitDueOn(h, date) && !isCreatedAfter(h, date))
   );
 
   listEl.replaceChildren();
@@ -105,10 +333,10 @@ function renderList(listEl, emptyEl, sheetEl) {
   if (emptyEl) emptyEl.hidden = true;
   listEl.hidden = false;
 
-  const refresh = () => renderList(listEl, emptyEl, sheetEl);
+  const refresh = () => renderList(listEl, emptyEl, sheetEl, date);
 
   for (const habit of habits) {
-    listEl.appendChild(habitListItem(habit, todayKey, sheetEl, refresh));
+    listEl.appendChild(habitListItem(habit, dayKey, sheetEl, refresh));
   }
 }
 
